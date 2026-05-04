@@ -70,12 +70,12 @@ def fetch_data(target_date):
     
     print(f"Target Date: {target_date}")
     
-    # Get Data from Primeline-Creatives
+    # Get Data from Primeline Creatives
     try:
-        ws_trends = sh.worksheet("Primeline-Creatives")
+        ws_trends = sh.worksheet("Primeline Creatives")
     except gspread.exceptions.WorksheetNotFound:
         try:
-            ws_trends = sh.worksheet("Primeline-creatives")
+            ws_trends = sh.worksheet("Primeline-Creatives")
         except gspread.exceptions.WorksheetNotFound:
             print(f"Available sheets: {[w.title for w in sh.worksheets()]}")
             # Fallback to the first sheet
