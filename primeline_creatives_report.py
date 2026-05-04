@@ -71,7 +71,17 @@ def fetch_data(target_date):
     print(f"Target Date: {target_date}")
     
     # Get Data from Primeline-Creatives
-    ws_trends = sh.worksheet("Primeline-Creatives")
+    try:
+        ws_trends = sh.worksheet("Primeline-Creatives")
+    except gspread.exceptions.WorksheetNotFound:
+        try:
+            ws_trends = sh.worksheet("Primeline-creatives")
+        except gspread.exceptions.WorksheetNotFound:
+            print(f"Available sheets: {[w.title for w in sh.worksheets()]}")
+            # Fallback to the first sheet
+            ws_trends = sh.worksheets()[0]
+            print(f"Fell back to using sheet: {ws_trends.title}")
+            
     all_data = ws_trends.get_all_values()
     if not all_data:
         return target_date, 0, 0, 0, 0, []
