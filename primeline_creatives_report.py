@@ -8,7 +8,6 @@ from google.oauth2.service_account import Credentials
 from jinja2 import Template
 import base64
 from datetime import datetime, timedelta
-from playwright.sync_api import sync_playwright
 
 # Configuration
 SPREADSHEET_ID = '1onzfa2zoPGgEAD8efVaGpcQYGex9s5iKCFke0btmnk0'
@@ -229,28 +228,7 @@ def format_html(target_date, emails_received, emails_completed, total_completed_
         detailed_rows=detailed_rows
     )
 
-def capture_screenshot(html_content, output_path="report_screenshot.png"):
-    # Write temporary HTML file
-    temp_html = "temp_report.html"
-    with open(temp_html, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    # We want a full-path URI for playwright
-    abs_path = "file:///" + os.path.abspath(temp_html).replace("\\", "/")
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page(viewport={'width': 1000, 'height': 800})
-        page.goto(abs_path)
-        # Wait for any potential rendering
-        page.wait_for_load_state("networkidle")
-        
-        # Take screenshot of the body so it frames the content nicely
-        body = page.locator("body")
-        body.screenshot(path=output_path)
-        browser.close()
-
-def send_email(subject, html_content, screenshot_path):
+def send_email(subject, html_content):
     password = os.environ.get('SMTP_PASSWORD')
     if not password:
         raise ValueError("SMTP_PASSWORD environment variable not set")
@@ -264,11 +242,6 @@ def send_email(subject, html_content, screenshot_path):
     
     msg.set_content("Please enable HTML to view this report.")
     msg.add_alternative(html_content, subtype='html')
-    
-    if os.path.exists(screenshot_path):
-        with open(screenshot_path, 'rb') as f:
-            img_data = f.read()
-        msg.add_attachment(img_data, maintype='image', subtype='png', filename='report_summary.png')
     
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
@@ -284,13 +257,9 @@ def main():
         print("Generating HTML report...")
         html_content = format_html(target_date, emails_received, emails_completed, total_items, pending, detailed)
         
-        screenshot_path = "report_screenshot.png"
-        print("Capturing screenshot...")
-        capture_screenshot(html_content, screenshot_path)
-        
         subject = f"Primeline-Creatives Summary : {target_date}"
         print(f"Sending email: {subject}")
-        send_email(subject, html_content, screenshot_path)
+        send_email(subject, html_content)
         
         print("Success!")
     except Exception as e:
