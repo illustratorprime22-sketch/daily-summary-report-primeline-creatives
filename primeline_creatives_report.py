@@ -70,6 +70,9 @@ def fetch_data(target_date):
     
     print(f"Target Date: {target_date}")
     
+    today = datetime.now()
+    today_str = f"{today.day}-{today.strftime('%b-%y')}"
+    
     # Get Data from Primeline Creatives
     try:
         ws_trends = sh.worksheet("Primeline Creatives")
@@ -99,9 +102,18 @@ def fetch_data(target_date):
             row = row + [""] * (14 - len(row))
         
         row_date = str(row[0]).strip()
+        email_subject = str(row[6]).strip() # Column G
         done_date = str(row[13]).strip() # Column N
         total_items = str(row[9]).strip() # Column J
         
+        if row_date == today_str:
+            continue
+            
+        is_pending = not done_date or done_date.lower() == 'pending'
+        
+        if is_pending and not email_subject:
+            continue
+            
         # 1. Emails Received: Date matches target_date
         if row_date == target_date:
             emails_received += 1
@@ -115,11 +127,10 @@ def fetch_data(target_date):
                 pass
         
         # 3. Pending: Done date is "Pending" or empty (but has a Date in col A)
-        if (done_date.lower() == 'pending' or not done_date) and row_date:
+        if is_pending and row_date:
             pending_count += 1
             
         # 4. Detailed Rows
-        is_pending = not done_date or done_date.lower() == 'pending'
         if (done_date == target_date or is_pending) and row_date:
             detailed_rows.append([
                 row[0], 
@@ -166,9 +177,9 @@ def format_html(target_date, emails_received, emails_completed, total_completed_
         body { font-family: Calibri, sans-serif; font-size: 10pt; line-height: 1.2; }
         table { border-collapse: collapse; border: 1px solid #000000; margin-top: 10px; width: auto; min-width: 400px; }
         td { border: 1px solid #000000; padding: 2px 6px; font-size: 10pt; }
-        .header-cell { font-weight: bold; background-color: #333333; color: white; }
+        .header-cell { font-weight: bold; }
         .detail-table { width: 100%; max-width: 800px; }
-        .section-title { font-weight: bold; background-color: #333333; color: white; text-align: center; }
+        .section-title { font-weight: bold; text-align: center; }
     </style>
     </head>
     <body>
