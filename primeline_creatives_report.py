@@ -62,7 +62,7 @@ def get_target_date():
     else:
         target_date = today - timedelta(days=1)
     
-    return target_date.strftime("%d-%b-%y")
+    return f"{target_date.day}-{target_date.strftime('%b-%y')}"
 
 def fetch_data(target_date):
     gc = get_google_client()
