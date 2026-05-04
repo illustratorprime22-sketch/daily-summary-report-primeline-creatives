@@ -95,12 +95,12 @@ def fetch_data(target_date):
     detailed_rows = []
 
     for row in rows:
-        if len(row) < 15: # Pad row if shorter than index O
-            row = row + [""] * (15 - len(row))
+        if len(row) < 14: # Pad row if shorter than index N
+            row = row + [""] * (14 - len(row))
         
         row_date = str(row[0]).strip()
-        done_date = str(row[14]).strip()
-        total_items = str(row[7]).strip()
+        done_date = str(row[13]).strip() # Column N
+        total_items = str(row[9]).strip() # Column J
         
         # 1. Emails Received: Date matches target_date
         if row_date == target_date:
@@ -125,8 +125,8 @@ def fetch_data(target_date):
                 row[0], 
                 row[5], 
                 row[6], 
-                row[7] if not is_pending else "", 
-                row[14] if row[14].strip() else "Pending"
+                row[9] if not is_pending else "", # Column J
+                row[13] if row[13].strip() else "Pending" # Column N
             ])
 
     return emails_received, emails_completed, total_completed_items, pending_count, detailed_rows
