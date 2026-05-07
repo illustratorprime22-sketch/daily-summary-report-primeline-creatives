@@ -86,7 +86,7 @@ def fetch_data(target_date):
             
     all_data = ws_trends.get_all_values()
     if not all_data:
-        return target_date, 0, 0, 0, 0, []
+        return 0, 0, 0, 0, []
 
     rows = all_data[1:]
     
@@ -101,18 +101,21 @@ def fetch_data(target_date):
             row = row + [""] * (14 - len(row))
         
         row_date = str(row[0]).strip()
+        email_from = str(row[5]).strip() # Column F
         email_subject = str(row[6]).strip() # Column G
         done_date = str(row[13]).strip() # Column N
         total_items = str(row[9]).strip() # Column J
         
-        if row_date == today_str:
+        # Skip if no date or if it matches today
+        if not row_date or row_date == today_str:
+            continue
+            
+        # --- VALIDATION: Skip header rows and empty placeholder rows ---
+        if not email_subject or email_subject.lower() == 'email subject' or email_from.lower() == 'email from':
             continue
             
         is_pending = not done_date or done_date.lower() == 'pending'
         
-        if is_pending and not email_subject:
-            continue
-            
         # 1. Emails Received: Date matches target_date
         if row_date == target_date:
             emails_received += 1
@@ -121,22 +124,24 @@ def fetch_data(target_date):
         if done_date == target_date:
             emails_completed += 1
             try:
-                total_completed_items += int(total_items) if total_items else 0
+                # Clean total_items string
+                val = "".join(filter(str.isdigit, total_items))
+                total_completed_items += int(val) if val else 0
             except:
                 pass
         
-        # 3. Pending: Done date is "Pending" or empty (but has a Date in col A)
-        if is_pending and row_date:
+        # 3. Pending: Done date is "Pending" or empty
+        if is_pending:
             pending_count += 1
             
         # 4. Detailed Rows
-        if (done_date == target_date or is_pending) and row_date:
+        if (done_date == target_date or is_pending):
             detailed_rows.append([
                 row[0], 
                 row[5], 
                 row[6], 
-                row[9] if not is_pending else "", # Column J
-                row[13] if row[13].strip() else "Pending" # Column N
+                row[9] if not is_pending else "", 
+                done_date if done_date.strip() else "Pending"
             ])
 
     return emails_received, emails_completed, total_completed_items, pending_count, detailed_rows
