@@ -1,9 +1,7 @@
 name: Primeline Creatives Daily Report
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '05 14 * * 1-5' # 7:35 PM IST
+  workflow_dispatch: # Triggered via Google Apps Script at 7:35 PM IST (Mon-Fri)
 
 
 jobs:
